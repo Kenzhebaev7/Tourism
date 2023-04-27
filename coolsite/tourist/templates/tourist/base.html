@@ -1,11 +1,12 @@
 {% load static %}
+{% load tourist_tags %}
 <!DOCTYPE html>
 <html>
 <head>
 	<title>{{title}}</title>
 	<link type="text/css" href="{% static 'tourist/css/styles.css' %}" rel="stylesheet" />
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<link rel="shortcut icon" href="{% static 'tourist/images/logo.png' %}" type="image/x-icon"/>
+	<link rel="shortcut icon" href="{% static 'tourist/images/main.ico' %}" type="image/x-icon"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -14,14 +15,15 @@
 {% block mainmenu %}
 		<div class="header">
 			<ul id="mainmenu" class="mainmenu">
-			<li class="logo"><a href="{% static 'tourist/images/logo.png' %}" type="image/x-icon"><div class="logo"></div></a></li>
+			<li class="logo"><a href="{% url 'home' %}"><div class="logo"></div></a></li>
 {% for m in menu %}
-	{% if not forloop.last %}
-			<li><a href="#">{{m.title}}</a></li>
-	{% else %}
-			<li class="last"><a href="#">{{m.title}}</a></li>
-	{% endif %}
+			<li><a href="{% url m.url_name %}">{{m.title}}</a></li>
 {% endfor %}
+				{% if request.user.is_authenticated %}
+				<li class="last"> {{user.username}} | <a href="{% url 'logout' %}">Выйти</a></li>
+				{% else %}
+				<li class="last"><a href="{% url 'register' %}">Регистрация</a> | <a href="{% url 'login' %}">Войти</a></li>
+				{% endif %}
 			</ul>
 			<div class="clear"></div>
 		</div>
@@ -33,13 +35,25 @@
 <!-- Sidebar слева -->
 	<td valign="top" class="left-chapters">
 	<ul id="leftchapters">
-		<li class="selected">Категориялар</li>
-		<li><a href="#">Ойын - сауық</a></li>
-		<li><a href="#">Табиғат</a></li>
-		<li><a href="#">Қажеттілік</a></li>
+{% if cat_selected == 0 %}
+		<li class="selected">Все категории</li>
+{% else %}
+		<li><a href="{% url 'home' %}">Все категории</a></li>
+{% endif %}
+
+{% for c in cats %}
+{% if c.tourist__count > 0 %}
+	{% if c.pk == cat_selected %}
+		<li class="selected">{{c.name}}</li>
+	{% else %}
+		<li><a href="{{ c.get_absolute_url }}">{{c.name}}</a></li>
+	{% endif %}
+{% endif %}
+{% endfor %}
+
 		<li class="share">
-		<p>Біздің арна</p>
-		<a class="share-yt" href="https://youtu.be/wMbXtclwu_o" target="_blank" rel="nofollow"></a>
+		<p>Наш канал</p>
+		<a class="share-yt" href="https://www.youtube.com/channel/UClJzWfGWuGJL2t-3dYKcHTA/playlists" target="_blank" rel="nofollow"></a>
 		</li>
 	</ul>
 </td>
@@ -53,6 +67,34 @@
 	<div class="content-text">
 {% block content %}
 {% endblock %}
+{% if page_obj.has_other_pages %}
+<nav class="list-pages">
+    <ul>
+{% if page_obj.has_previous %}
+<li class="page-num">
+	<a href="?page={{ page_obj.previous_page_number }}">&lt;</a>
+</li>
+{% endif %}
+
+        {% for p in paginator.page_range %}
+		{% if page_obj.number == p %}
+        <li class="page-num page-num-selected">{{ p }}</li>
+		{% elif p >= page_obj.number|add:-2 and p <= page_obj.number|add:2  %}
+        <li class="page-num">
+            <a href="?page={{ p }}">{{ p }}</a>
+        </li>
+		{% endif %}
+        {% endfor %}
+
+{% if page_obj.has_next %}
+<li class="page-num">
+	<a href="?page={{ page_obj.next_page_number }}">&gt;</a>
+</li>
+{% endif %}
+
+    </ul>
+</nav>
+{% endif %}
 	</div>
 <!-- Конец блока контента -->
 
@@ -61,7 +103,7 @@
 <!-- Footer -->
 <tr><td valign=top>
 	<div id="footer">
-		<p>&copy; 2023 басқа ресурстарға, соның ішінде қағазға тарату үшін осы сайттан ақпаратты ішінара немесе толық көшіруге қатаң тыйым салынады.</p>
+		<p>© 2021 басқа ресурстарға, соның ішінде қағазға тарату үшін осы сайттан ақпаратты ішінара немесе толық көшіруге қатаң тыйым салынады.</p>
 	</div>
 </td></tr></table>
 <!-- Конец footer'а и страницы -->
